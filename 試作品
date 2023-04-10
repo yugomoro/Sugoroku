@@ -1,0 +1,130 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class Main {
+    public static void main(String[] args) {
+        Game game = new Game();
+        game.setBoard(new Board("data/board.csv"));
+        game.addPlayer(new Player("Taro"));
+        game.addPlayer(new Player("Jiro"));
+        game.setDice(new Dice());
+        game.start();
+    }
+}
+
+class Game {
+    private Board board;
+    private List<Player> players;
+    private Dice dice;
+
+    public Game() {
+        players = new ArrayList<Player>();
+    }
+
+    public void setBoard(Board board) {
+        this.board = board;
+    }
+
+    public void addPlayer(Player player) {
+        players.add(player);
+    }
+
+    public void setDice(Dice dice) {
+        this.dice = dice;
+    }
+
+    public void start() {
+        boolean gameEnd = false;
+        while (!gameEnd) {
+            for (Player player : players) {
+                int diceRoll = dice.roll();
+                System.out.println(player.getName() + " は " + diceRoll + " を引いた ");
+                int newPosition = player.getPosition() + diceRoll;
+                int oldPosition = player.getPosition();
+                if (newPosition > board.getSize()) {
+                    newPosition = board.getSize() - (newPosition - board.getSize());
+                } else if (newPosition < 0) {
+                    newPosition = Math.abs(newPosition);
+                }
+                player.setPosition(newPosition);
+                int move = newPosition - oldPosition;
+                String message = "";
+                if (move > 0) {
+                    message = " 進む ";
+                } else {
+                    message = " 戻る ";
+                }
+                System.out.println(player.getName() + " は " + Math.abs(move) + message);
+                if (player.getPosition() == board.getSize()) {
+                    gameEnd = true;
+                    System.out.println(player.getName() + " の勝ち！ ");
+                    break;
+                }
+            }
+        }
+    }
+}
+
+class Player {
+    private String name;
+    private int position;
+
+    public Player(String name) {
+        this.name = name;
+        this.position = 0;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
+}
+
+class Board {
+    private List<Integer> squares;
+
+    public Board(String fileName) {
+        squares = new ArrayList<Integer>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(fileName));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                squares.add(Integer.parseInt(line));
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int getSize() {
+        return squares.size();
+    }
+
+    public int getSquare(int index) {
+        return squares.get(index);
+    }
+}
+
+class Dice {
+    private Random random;
+
+    public Dice() {
+        random = new Random();
+    }
+
+    public int roll() {
+        return random.nextInt(6) + 1;
+    }
+}
